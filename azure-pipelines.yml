@@ -1,22 +1,14 @@
-# Azure Functions .NET 8 (Isolated) - Build & Deploy (self-hosted)
+
 trigger:
 - main
 
 variables:
   dotnetVersion: '8.x'
   buildConfiguration: 'Release'
-
-  # Caminho do .csproj a partir da raiz do repo
   relFunctionProject: 'FCGPagamentos.Functions/FCGPagamentos.Functions.csproj'
-
-  # Saídas
   publishDir: '/app/publish'
   artifactName: 'azfunctions2025'
-
-  # Azure DevOps Service Connection (NOME exato)
   azureSubscription: 'SUBSCRIPTION_AZURE'
-
-  # Azure Function App
   functionAppName: 'fcg-payments-updates'
 
 pool:
@@ -24,9 +16,6 @@ pool:
 
 stages:
 
-# ======================
-# BUILD
-# ======================
 - stage: Build
   displayName: 'Build Azure Function'
   jobs:
