@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCGPagamentos.Functions", "FCGPagamentos.Functions\FCGPagamentos.Functions.csproj", "{38348CE1-03E2-4213-8C22-F767B48585F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCGPagamentos.Functions.Tests", "FCGPagamentos.Functions.Tests\FCGPagamentos.Functions.Tests.csproj", "{CBA4B351-04E3-41A2-94D7-11256B8ABD02}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C59B5E9B-CD1C-456C-AC10-57D64B97D19A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +21,17 @@ Global
 		{38348CE1-03E2-4213-8C22-F767B48585F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38348CE1-03E2-4213-8C22-F767B48585F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38348CE1-03E2-4213-8C22-F767B48585F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBA4B351-04E3-41A2-94D7-11256B8ABD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBA4B351-04E3-41A2-94D7-11256B8ABD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBA4B351-04E3-41A2-94D7-11256B8ABD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBA4B351-04E3-41A2-94D7-11256B8ABD02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{38348CE1-03E2-4213-8C22-F767B48585F0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CBA4B351-04E3-41A2-94D7-11256B8ABD02} = {C59B5E9B-CD1C-456C-AC10-57D64B97D19A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {92D1EAD7-6FC1-4AC9-99FE-1E5F8FF8FF8C}
