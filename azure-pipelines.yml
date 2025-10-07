@@ -1,0 +1,123 @@
+# Azure Functions .NET 8 (Isolated) - Build & Deploy (self-hosted)
+trigger:
+- main
+
+variables:
+  dotnetVersion: '8.x'
+  buildConfiguration: 'Release'
+
+  # Caminho do .csproj a partir da raiz do repo
+  relFunctionProject: 'FCGPagamentos.Functions/FCGPagamentos.Functions.csproj'
+
+  # Saídas
+  publishDir: '/app/publish'
+  artifactName: 'azfunctions2025'
+
+  # Azure DevOps Service Connection (NOME exato)
+  azureSubscription: 'SUBSCRIPTION_AZURE'
+
+  # Azure Function App
+  functionAppName: 'fcg-payments-updates'
+
+pool:
+  name: Default_fase03
+
+stages:
+
+# ======================
+# BUILD
+# ======================
+- stage: Build
+  displayName: 'Build Azure Function'
+  jobs:
+  - job: Build
+    displayName: 'Build Job'
+    steps:
+    - checkout: self
+      clean: true
+
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK $(dotnetVersion)'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
+
+    - powershell: |
+        $proj = Join-Path "$(Build.SourcesDirectory)" "$(relFunctionProject)"
+        if (-not (Test-Path $proj)) { throw "CSProj não encontrado: $proj" }
+        Write-Host "##vso[task.setvariable variable=functionProject]$proj"
+        New-Item -ItemType Directory -Force -Path "$(publishDir)" | Out-Null
+        Write-Host "functionProject = $proj"
+        Write-Host "publishDir      = $(publishDir)"
+      displayName: 'Resolver csproj e preparar publishDir'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore (Function)'
+      inputs:
+        command: 'restore'
+        projects: '$(functionProject)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build (Function)'
+      inputs:
+        command: 'build'
+        projects: '$(functionProject)'
+        arguments: '--no-restore --configuration $(buildConfiguration)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish (gera ZIP pronto)'
+      inputs:
+        command: 'publish'
+        projects: '$(functionProject)'
+        arguments: '-c $(buildConfiguration) -o $(publishDir) /p:GenerateRuntimeConfigurationFiles=true /p:AzureFunctionsVersion=v4'
+        publishWebProjects: false
+        zipAfterPublish: true
+
+    - powershell: |
+        Write-Host "Conteúdo de $(publishDir):"
+        Get-ChildItem -Recurse "$(publishDir)" | % { $_.FullName } | Write-Host
+
+        $zip = Get-ChildItem -Path "$(publishDir)" -Filter *.zip | Select-Object -First 1
+        if (-not $zip) { throw "Nenhum .zip gerado foi encontrado em $(publishDir)." }
+
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($zip.FullName)
+        try {
+          $entry = $archive.Entries | Where-Object { $_.FullName -ieq "host.json" }
+          if (-not $entry) { throw "host.json não está na RAIZ do ZIP ($($zip.Name))." }
+          Write-Host "OK: host.json encontrado no zip $($zip.Name)."
+        } finally {
+          $archive.Dispose()
+        }
+
+        Write-Host "##vso[task.setvariable variable=publishedZip]$($zip.FullName)"
+        Write-Host "ZIP: $($zip.FullName)"
+      displayName: 'Validar ZIP (host.json na raiz) e localizar ZIP'
+
+    - publish: '$(publishedZip)'
+      displayName: 'Publicar artefato'
+      artifact: '$(artifactName)'
+
+- stage: Deploy
+  displayName: 'Deploy stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: 'Deploy'
+    environment: 'development'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: $(artifactName)
+
+          - task: AzureFunctionApp@2
+            displayName: 'Azure Functions Zip Deploy'
+            inputs:
+              connectedServiceNameARM: '$(azureSubscription)'
+              appType: 'functionAppLinux'
+              appName: '$(functionAppName)'
+
+              package: '$(Pipeline.Workspace)/$(artifactName)/*.zip'
